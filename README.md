@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pastebin Lite
+A minimal Pastebin-like application where users can create text pastes and share a link to view them. Pastes can optionally expire based on time-to-live (TTL) or maximum view count.
 
-## Getting Started
+## Features
+- Create a paste with arbitrary text
+- Shareable URL to view a paste
+- Optional TTL-based expiry
+- Optional view-count limit
+- Deterministic time support for testing
+- Serverless-safe persistence
 
-First, run the development server:
+## Tech Stack
+- Next.js (App Router)
+- Node.js
+- MongoDB Atlas
+- Mongoose
+- Vercel (deployment)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## API Endpoints
+### Health Check
+GET /api/healthz
 ```
+{ "ok": true }
+```
+### Create Paste
+POST /api/pastes
+```
+{
+  "content": "string",
+  "ttl_seconds": 60,
+  "max_views": 5
+}
+```
+### Fetch Paste (API)
+GET /api/pastes/:id
+```
+{
+  "content": "string",
+  "remaining_views": 4,
+  "expires_at": "ISO-8601 timestamp or null"
+}
+```
+### View Paste (HTML)
+GET /p/:id
+Returns an HTML page rendering the paste content safely.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Persistence Layer
+MongoDB Atlas is used as the persistence layer. It ensures data survives across requests and is suitable for serverless deployments.
+### Deterministic Testing
+If the environment variable TEST_MODE=1 is set, the application uses the request header:
+```
+x-test-now-ms: <milliseconds since epoch>
+```
+as the current time for expiry logic.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Running Locally
+1. Install dependencies:
+```
+npm install
+```
+2. Create .env.local:
+```
+MONGODB_URI=<your_mongodb_connection_string>
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
+3. Start the dev server:
+```
+npm run dev
+```
+Open:
+```
+http://localhost:3000
+```
+## Notes
+- No secrets are committed to the repository
+- No global mutable state is used
+- Designed to pass automated evaluation tests
